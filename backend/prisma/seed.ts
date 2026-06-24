@@ -1,20 +1,41 @@
 import prisma from '../src/lib/prisma';
-import { ItemStatus } from '../src/generated/prisma/enums';
+import { OrderStatus } from '../src/generated/prisma/enums';
 
-const items = [
-  { name: 'First item', description: 'Sample draft item', status: ItemStatus.DRAFT, priority: 0 },
-  { name: 'Second item', description: 'Sample active item', status: ItemStatus.ACTIVE, priority: 1 },
-  { name: 'Third item', description: 'Sample archived item', status: ItemStatus.ARCHIVED, priority: 2 },
+const orders = [
+  {
+    trackingNumber: 'AWB0000001',
+    senderName: 'Alice',
+    recipientName: 'Bob',
+    origin: 'JAKARTA',
+    destination: 'SURABAYA',
+    status: OrderStatus.PENDING,
+  },
+  {
+    trackingNumber: 'AWB0000002',
+    senderName: 'Carol',
+    recipientName: 'Dave',
+    origin: 'BANDUNG',
+    destination: 'MEDAN',
+    status: OrderStatus.IN_TRANSIT,
+  },
+  {
+    trackingNumber: 'AWB0000003',
+    senderName: 'Erin',
+    recipientName: 'Frank',
+    origin: 'SEMARANG',
+    destination: 'MAKASSAR',
+    status: OrderStatus.DELIVERED,
+  },
 ];
 
 async function main() {
-  for (const item of items) {
-    const exists = await prisma.item.findFirst({ where: { name: item.name } });
+  for (const order of orders) {
+    const exists = await prisma.order.findUnique({ where: { trackingNumber: order.trackingNumber } });
     if (!exists) {
-      await prisma.item.create({ data: item });
-      console.log(`Created item: ${item.name}`);
+      await prisma.order.create({ data: order });
+      console.log(`Created order: ${order.trackingNumber}`);
     } else {
-      console.log(`Skipped item (exists): ${item.name}`);
+      console.log(`Skipped order (exists): ${order.trackingNumber}`);
     }
   }
 

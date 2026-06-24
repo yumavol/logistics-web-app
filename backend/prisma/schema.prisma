@@ -7,18 +7,21 @@ datasource db {
   provider = "postgresql"
 }
 
-enum ItemStatus {
-  DRAFT
-  ACTIVE
-  ARCHIVED
+enum OrderStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  CANCELED
 }
 
-model Item {
-  id          String     @id @default(cuid())
-  name        String
-  description String?
-  status      ItemStatus @default(DRAFT)
-  priority    Int        @default(0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+model Order {
+  id             String      @id @default(cuid())
+  trackingNumber String      @unique
+  senderName     String
+  recipientName  String
+  origin         String
+  destination    String
+  status         OrderStatus @default(PENDING)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
