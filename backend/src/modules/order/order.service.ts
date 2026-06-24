@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
+import { OrderStatus } from '@/generated/prisma/enums';
 import { ValidationError } from '@/lib/errors';
-import type { CreateOrderDto, ListOrdersQueryDto } from '@/modules/order/order.schema';
+import type { CreateOrderDto, ListOrdersQueryDto, UpdateStatusDto } from '@/modules/order/order.schema';
 
 export class OrderService {
   async create(dto: CreateOrderDto) {
@@ -31,6 +32,27 @@ export class OrderService {
       throw new ValidationError('Order not found', undefined, 404);
     }
     return order;
+  }
+
+  async updateStatus(id: string, dto: UpdateStatusDto) {
+    await this.findOne(id);
+    return prisma.order.update({ where: { id }, data: { status: dto.status } });
+  }
+
+  async trackByNumber(trackingNumber: string) {
+    const order = await prisma.order.findUnique({ where: { trackingNumber } });
+    if (!order) {
+      throw new ValidationError('Order not found', undefined, 404);
+    }
+    return order;
+  }
+
+  async cancel(id: string) {
+    const order = await this.findOne(id);
+    if (order.status !== OrderStatus.PENDING) {
+      throw new ValidationError('Only pending orders can be canceled', undefined, 409);
+    }
+    return prisma.order.update({ where: { id }, data: { status: OrderStatus.CANCELED } });
   }
 
   private async generateTrackingNumber() {
