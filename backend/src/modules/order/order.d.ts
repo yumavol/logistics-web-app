@@ -1,16 +1,6 @@
-import { OrderStatus } from '@/generated/prisma/enums';
+import type { Order } from '@/modules/order/order.schema';
 
-export interface OrderResponse {
-  id: string;
-  trackingNumber: string;
-  senderName: string;
-  recipientName: string;
-  origin: string;
-  destination: string;
-  status: OrderStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type OrderResponse = Order;
 
 export type OrderSingleResponse = ApiResponse<OrderResponse>;
 export type OrderListResponse = ApiResponse<OrderResponse[]>;

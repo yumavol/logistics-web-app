@@ -1,9 +1,9 @@
 import prisma from '../src/lib/prisma';
 import { OrderStatus } from '../src/generated/prisma/enums';
+import { OrderService } from '../src/modules/order/order.service';
 
 const orders = [
   {
-    trackingNumber: 'AWB0000001',
     senderName: 'Alice',
     recipientName: 'Bob',
     origin: 'JAKARTA',
@@ -11,7 +11,6 @@ const orders = [
     status: OrderStatus.PENDING,
   },
   {
-    trackingNumber: 'AWB0000002',
     senderName: 'Carol',
     recipientName: 'Dave',
     origin: 'BANDUNG',
@@ -19,7 +18,6 @@ const orders = [
     status: OrderStatus.IN_TRANSIT,
   },
   {
-    trackingNumber: 'AWB0000003',
     senderName: 'Erin',
     recipientName: 'Frank',
     origin: 'SEMARANG',
@@ -30,12 +28,15 @@ const orders = [
 
 async function main() {
   for (const order of orders) {
-    const exists = await prisma.order.findUnique({ where: { trackingNumber: order.trackingNumber } });
+    const exists = await prisma.order.findFirst({
+      where: { senderName: order.senderName, recipientName: order.recipientName },
+    });
     if (!exists) {
-      await prisma.order.create({ data: order });
-      console.log(`Created order: ${order.trackingNumber}`);
+      const trackingNumber = await OrderService.generateTrackingNumber();
+      await prisma.order.create({ data: { ...order, trackingNumber } });
+      console.log(`Created order: ${trackingNumber}`);
     } else {
-      console.log(`Skipped order (exists): ${order.trackingNumber}`);
+      console.log(`Skipped order (exists): ${exists.trackingNumber}`);
     }
   }
 

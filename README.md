@@ -56,6 +56,24 @@ npm run dev
 | Backend  | http://localhost:8000 |
 | pgAdmin  | http://localhost:5050 |
 
+### Connecting pgAdmin
+
+pgAdmin runs in its own container and starts with no server registered. Log in
+(`admin@admin.com` / `admin`), then add a server with **Object → Register → Server**:
+
+| Field | Value      |
+| ----- | ---------- |
+| Host  | `postgres` |
+| Port  | `5432`     |
+| Database | `logistics` |
+| Username | `postgres` |
+| Password | `postgres` |
+
+Use `postgres` (the compose service name) as the host, **not** `localhost`. Inside
+the container `localhost` points at pgAdmin itself, so it returns
+`connection refused`. `localhost:5432` only works from your host machine (e.g. the
+backend's `.env`), not container-to-container.
+
 ## Project structure
 
 ```

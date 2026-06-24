@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
 import routes from '@/routes';
+import { openapiDocument } from '@/lib/openapi';
 import { errorHandler } from '@/middlewares/errorHandler';
 
 const app = express();
@@ -8,6 +10,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
 
 app.use('/api', routes);
 

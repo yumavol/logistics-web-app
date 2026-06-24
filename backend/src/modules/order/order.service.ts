@@ -5,7 +5,7 @@ import type { CreateOrderDto, ListOrdersQueryDto, UpdateStatusDto } from '@/modu
 
 export class OrderService {
   async create(dto: CreateOrderDto) {
-    const trackingNumber = await this.generateTrackingNumber();
+    const trackingNumber = await OrderService.generateTrackingNumber();
     return prisma.order.create({
       data: {
         trackingNumber,
@@ -55,7 +55,7 @@ export class OrderService {
     return prisma.order.update({ where: { id }, data: { status: OrderStatus.CANCELED } });
   }
 
-  private async generateTrackingNumber() {
+  static async generateTrackingNumber() {
     const PREFIX = 'AWB';
     const WIDTH = 7;
     const rows = await prisma.$queryRaw<{ nextval: bigint }[]>`SELECT nextval('awb_seq') AS nextval`;
