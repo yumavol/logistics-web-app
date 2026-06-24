@@ -59,15 +59,15 @@ npm run dev
 ### Connecting pgAdmin
 
 pgAdmin runs in its own container and starts with no server registered. Log in
-(`admin@admin.com` / `admin`), then add a server with **Object → Register → Server**:
+(`admin@admin.com` / `admin`), then add a server with **Object -> Register -> Server**:
 
-| Field | Value      |
-| ----- | ---------- |
-| Host  | `postgres` |
-| Port  | `5432`     |
+| Field    | Value       |
+| -------- | ----------- |
+| Host     | `postgres`  |
+| Port     | `5432`      |
 | Database | `logistics` |
-| Username | `postgres` |
-| Password | `postgres` |
+| Username | `postgres`  |
+| Password | `postgres`  |
 
 Use `postgres` (the compose service name) as the host, **not** `localhost`. Inside
 the container `localhost` points at pgAdmin itself, so it returns
@@ -80,9 +80,9 @@ backend's `.env`), not container-to-container.
 backend/
   prisma/                 schema, migrations, seed
   src/
-    lib/                  prisma client, error classes
+    lib/                  prisma client, error classes, OpenAPI spec (openapi.ts)
     middlewares/          express error handler
-    modules/item/         example resource (controller, service, schema, types)
+    modules/order/        order resource (controller, service, schema, types)
     app.ts                express app + middleware
     routes.ts             route registration
     server.ts             entry point
@@ -95,27 +95,34 @@ frontend/
   types/                  shared response types
 ```
 
-The `item` module is a full vertical slice (create, list, get, update, delete) to copy when adding new resources.
+The `order` module is a full vertical slice (create, list, track, update status, cancel).
 
 ## Commands
 
-| Command                     | Description                          |
-| --------------------------- | ------------------------------------ |
-| `npm run dev`               | Run frontend and backend             |
-| `npm run build`             | Build all packages                   |
-| `npm run lint`              | Lint all packages                    |
-| `npm run db:migrate`        | Run pending migrations (dev)         |
-| `npm run db:generate`       | Generate the Prisma client           |
-| `npm run db:seed`           | Seed the database                    |
-| `npm run db:studio`         | Open Prisma Studio                   |
-| `npm run db:reset`          | Reset the database                   |
+| Command               | Description                  |
+| --------------------- | ---------------------------- |
+| `npm run dev`         | Run frontend and backend     |
+| `npm run build`       | Build all packages           |
+| `npm run lint`        | Lint all packages            |
+| `npm run db:migrate`  | Run pending migrations (dev) |
+| `npm run db:generate` | Generate the Prisma client   |
+| `npm run db:seed`     | Seed the database            |
+| `npm run db:studio`   | Open Prisma Studio           |
+| `npm run db:reset`    | Reset the database           |
 
 ## API
 
-| Method | Path             | Description     |
-| ------ | ---------------- | --------------- |
-| POST   | `/api/items`     | Create an item  |
-| GET    | `/api/items`     | List items      |
-| GET    | `/api/items/:id` | Get one item    |
-| PATCH  | `/api/items/:id` | Update an item  |
-| DELETE | `/api/items/:id` | Delete an item  |
+Interactive documentation (Swagger UI) is served at **http://localhost:8000/api/docs** while the backend is running. The raw OpenAPI spec lives in [`backend/src/lib/openapi.ts`](backend/src/lib/openapi.ts).
+
+| Method | Path                                | Description                                                                                                                 |
+| ------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/orders`                       | Create an order (sender, recipient, origin, destination). Generates a unique tracking number; status defaults to `PENDING`. |
+| GET    | `/api/orders`                       | List orders. Optional `status` and `search` (tracking number, sender, or recipient) query filters.                                               |
+| GET    | `/api/orders/track/:trackingNumber` | Look up a single order by its tracking number.                                                                              |
+| GET    | `/api/orders/:id`                   | Get one order by id.                                                                                                        |
+| PATCH  | `/api/orders/:id/status`            | Update status to `PENDING`, `IN_TRANSIT`, or `DELIVERED`.                                                                   |
+| POST   | `/api/orders/:id/cancel`            | Cancel an order. Only allowed while status is `PENDING`; sets status to `CANCELED`.                                         |
+
+### Order status
+
+`PENDING` -> `IN_TRANSIT` -> `DELIVERED`. A `PENDING` order can instead be moved to `CANCELED` via the cancel endpoint.
