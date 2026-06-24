@@ -36,11 +36,16 @@ cp .env.example .env
 npm install
 ```
 
-### 4. Run migrations, generate the client, and seed
+### 4. Run migrations and generate the client
 
 ```bash
 npm run db:migrate
 npm run db:generate
+```
+
+### 5. (Optional) Seed sample data
+
+```bash
 npm run db:seed
 ```
 
