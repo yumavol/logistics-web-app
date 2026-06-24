@@ -11,6 +11,7 @@ import { alertToast, formatDateTime, waitAsync } from '@/helper';
 import { useDebounce } from 'use-debounce';
 import { TbCancel } from 'react-icons/tb';
 import { FaPencilAlt } from 'react-icons/fa';
+import Menu from '@/components/menu';
 
 export default function Home() {
   const [modalForm, setModalForm] = useState(false);
@@ -45,6 +46,13 @@ export default function Home() {
     },
   });
 
+  const hasActiveFilter = statusFilter !== undefined || search.trim() !== '';
+
+  const resetFilters = () => {
+    setStatusFilter(undefined);
+    setSearch('');
+  };
+
   const handleCancel = (order: OrderResponse) => {
     if (window.confirm(`Cancel order ${order.trackingNumber}?`)) {
       cancelOrder(order.id);
@@ -53,9 +61,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-base-100 font-sans">
-      <div className="max-w-6xl mx-auto px-4 py-10">
-        <h1 className="text-4xl font-bold text-center mb-6">Logistics Apps</h1>
-
+      <Menu />
+      <div className="max-w-6xl mx-auto px-4 pb-10">
         <div className="flex justify-end mb-4">
           <button className="btn btn-primary" onClick={() => setModalForm(true)}>
             Create Order
@@ -123,7 +130,16 @@ export default function Home() {
                   {!isLoading && !isError && (!orders || orders.length === 0) && (
                     <tr>
                       <td colSpan={7} className="text-center py-8 text-base-content/50">
-                        No orders found.
+                        {hasActiveFilter ? (
+                          <div className="flex flex-col items-center gap-3">
+                            <span>No orders match your filters.</span>
+                            <button className="btn btn-sm btn-outline" onClick={resetFilters}>
+                              Reset filters
+                            </button>
+                          </div>
+                        ) : (
+                          'No orders yet. Create one to get started.'
+                        )}
                       </td>
                     </tr>
                   )}
