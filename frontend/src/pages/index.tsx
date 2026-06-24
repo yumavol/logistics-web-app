@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/refs */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { httpGet, httpPost } from '@/helper/axios';
-import { useRef, useState } from 'react';
+import { httpGet, httpPatch, httpPost } from '@/helper/axios';
+import { useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
 import Modal from '@/components/modal';
 import SimpleReactValidator from 'simple-react-validator';
-import { OrderStatusBadge, ORDER_STATUS_OPTIONS } from '@/models/statuses';
+import { ORDER_STATUS, OrderStatusBadge, ORDER_STATUS_OPTIONS, UPDATABLE_ORDER_STATUS_OPTIONS } from '@/models/statuses';
 import { CITY_OPTIONS } from '@/models/cities';
 import { alertToast, formatDateTime, waitAsync } from '@/helper';
 import { useDebounce } from 'use-debounce';
@@ -15,6 +15,8 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search, 400);
+  const [statusModal, setStatusModal] = useState(false);
+  const [statusData, setStatusData] = useState<OrderResponse | null>(null);
 
   const {
     data: orders,
@@ -82,26 +84,27 @@ export default function Home() {
                     <th>Route</th>
                     <th>Status</th>
                     <th>updated At</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading && (
                     <tr>
-                      <td colSpan={6} className="text-center py-8">
+                      <td colSpan={7} className="text-center py-8">
                         <span className="loading loading-spinner loading-md" />
                       </td>
                     </tr>
                   )}
                   {!isLoading && isError && (
                     <tr>
-                      <td colSpan={6} className="text-center py-8 text-error">
+                      <td colSpan={7} className="text-center py-8 text-error">
                         Failed to load orders. Please try again.
                       </td>
                     </tr>
                   )}
                   {!isLoading && !isError && (!orders || orders.length === 0) && (
                     <tr>
-                      <td colSpan={6} className="text-center py-8 text-base-content/50">
+                      <td colSpan={7} className="text-center py-8 text-base-content/50">
                         No orders found.
                       </td>
                     </tr>
@@ -119,6 +122,18 @@ export default function Home() {
                           <OrderStatusBadge status={order.status} />
                         </td>
                         <td>{formatDateTime(order.updatedAt)}</td>
+                        <td>
+                          <button
+                            className="btn btn-xs btn-outline btn-primary"
+                            disabled={order.status === ORDER_STATUS.CANCELED.value}
+                            onClick={() => {
+                              setStatusData(order);
+                              setStatusModal(true);
+                            }}
+                          >
+                            Update Status
+                          </button>
+                        </td>
                       </tr>
                     ))}
                 </tbody>
@@ -129,7 +144,72 @@ export default function Home() {
       </div>
 
       <OrderForm setShowModal={setModalForm} showModal={modalForm} />
+      <StatusModal setShowModal={setStatusModal} showModal={statusModal} data={statusData} />
     </main>
+  );
+}
+
+function StatusModal({
+  setShowModal,
+  showModal,
+  data,
+}: {
+  setShowModal: (show: boolean) => void;
+  showModal: boolean;
+  data: OrderResponse | null;
+}) {
+  const queryClient = useQueryClient();
+  const [status, setStatus] = useState('');
+
+  useEffect(() => {
+    const initData = () => {
+      if (data && showModal) {
+        setStatus(data.status);
+      }
+    };
+    initData();
+  }, [data, showModal]);
+
+  const { mutate: save, isPending } = useMutation({
+    mutationFn: (payload: { status: string }) => httpPatch(`/orders/${data?.id}/status`, payload),
+    onSuccess: () => {
+      alertToast('success', 'Order status updated');
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setShowModal(false);
+    },
+  });
+
+  return (
+    <Modal onModalClose={() => setShowModal(false)} showModal={showModal} size="sm" title="Update Status">
+      <div className="flex flex-col gap-4">
+        <div className="text-sm">
+          <span className="text-base-content/60">Tracking Number</span>
+          <div className="font-mono font-medium">{data?.trackingNumber}</div>
+        </div>
+
+        <div>
+          <div className="form-label">Status</div>
+          <select className="select select-bordered w-full" value={status} onChange={(e) => setStatus(e.target.value)}>
+            {UPDATABLE_ORDER_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="w-full pt-4">
+          <button
+            type="button"
+            className="btn btn-primary w-full"
+            onClick={() => save({ status })}
+            disabled={isPending || status === data?.status}
+          >
+            {isPending ? <span className="loading loading-spinner loading-sm" /> : 'Save'}
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
