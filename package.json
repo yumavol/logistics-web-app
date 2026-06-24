@@ -1,0 +1,25 @@
+{
+  "name": "logistics-web-app",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@11.12.1",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:migrate:deploy": "turbo run db:migrate:deploy --filter=backend",
+    "db:generate": "turbo run db:generate --filter=backend",
+    "db:studio": "npm run db:studio -w backend",
+    "db:reset": "turbo run db:reset --filter=backend",
+    "db:seed": "npm run db:seed -w backend"
+  },
+  "devDependencies": {
+    "turbo": "^2"
+  }
+}
