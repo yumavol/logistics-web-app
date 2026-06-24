@@ -83,21 +83,21 @@ backend's `.env`), not container-to-container.
 
 ```
 backend/
-  prisma/                 schema, migrations, seed
-  src/
-    lib/                  prisma client, error classes, OpenAPI spec (openapi.ts)
-    middlewares/          express error handler
-    modules/order/        order resource (controller, service, schema, types)
-    app.ts                express app + middleware
-    routes.ts             route registration
-    server.ts             entry point
+├── prisma/                 schema, migrations, seed
+└── src/
+    ├── lib/                prisma client, error classes, OpenAPI spec (openapi.ts)
+    ├── middlewares/        express error handler
+    ├── modules/order/      order resource (controller, service, schema, types)
+    ├── app.ts              express app + middleware
+    ├── routes.ts           route registration
+    └── server.ts           entry point
 frontend/
-  src/
-    components/           modal, toast container
-    helper/               axios instance + helpers
-    models/               status enums + badges
-    pages/                app pages
-  types/                  shared response types
+├── src/
+│   ├── components/         modal, toast container
+│   ├── helper/             axios instance + helpers
+│   ├── models/             status enums + badges
+│   └── pages/              app pages
+└── types/                  shared response types
 ```
 
 The `order` module is a full vertical slice (create, list, track, update status, cancel).
