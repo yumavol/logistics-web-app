@@ -32,6 +32,7 @@ export type UpdateStatusDto = z.infer<typeof updateStatusSchema>;
 
 export const listOrdersQuerySchema = z.object({
   status: z.enum(OrderStatus).optional(),
+  search: z.string().optional(),
 });
 
 export type ListOrdersQueryDto = z.infer<typeof listOrdersQuerySchema>;

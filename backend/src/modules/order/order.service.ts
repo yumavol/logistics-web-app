@@ -21,6 +21,13 @@ export class OrderService {
     return prisma.order.findMany({
       where: {
         ...(query.status && { status: query.status }),
+        ...(query.search && {
+          OR: [
+            { trackingNumber: { contains: query.search, mode: 'insensitive' } },
+            { senderName: { contains: query.search, mode: 'insensitive' } },
+            { recipientName: { contains: query.search, mode: 'insensitive' } },
+          ],
+        }),
       },
       orderBy: { updatedAt: 'desc' },
     });

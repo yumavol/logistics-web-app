@@ -5,21 +5,28 @@ import { useRef, useState } from 'react';
 import cn from 'classnames';
 import Modal from '@/components/modal';
 import SimpleReactValidator from 'simple-react-validator';
-import { OrderStatusBadge } from '@/models/statuses';
+import { OrderStatusBadge, ORDER_STATUS_OPTIONS } from '@/models/statuses';
 import { CITY_OPTIONS } from '@/models/cities';
-import { alertToast, formatDateTime } from '@/helper';
+import { alertToast, formatDateTime, waitAsync } from '@/helper';
+import { useDebounce } from 'use-debounce';
 
 export default function Home() {
   const [modalForm, setModalForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebounce(search, 400);
 
   const {
     data: orders,
     isLoading,
     isError,
   } = useQuery<OrderResponse[]>({
-    queryKey: ['orders'],
+    queryKey: ['orders', statusFilter, debouncedSearch],
     queryFn: async () => {
-      const response = await httpGet('/orders').then((res) => res.data);
+      const response = await httpGet('/orders', false, {
+        status: statusFilter,
+        search: debouncedSearch || undefined,
+      }).then((res) => res.data);
       return response.data;
     },
   });
@@ -33,6 +40,34 @@ export default function Home() {
           <button className="btn btn-primary" onClick={() => setModalForm(true)}>
             Create Order
           </button>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-3 mb-4">
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={cn('btn btn-sm', statusFilter === undefined ? 'btn-primary' : 'btn-outline')}
+              onClick={() => setStatusFilter(undefined)}
+            >
+              All
+            </button>
+            {ORDER_STATUS_OPTIONS.map((status) => (
+              <button
+                key={status.value}
+                className={cn('btn btn-sm', statusFilter === status.value ? 'btn-primary' : 'btn-outline')}
+                onClick={() => setStatusFilter(status.value)}
+              >
+                {status.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex-1" />
+          <input
+            type="text"
+            placeholder="Search tracking, sender, recipient"
+            className="input input-bordered input-sm w-72"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
 
         <div className="card bg-base-100 shadow border border-base-200 overflow-hidden">
@@ -117,8 +152,10 @@ function OrderForm({ setShowModal, showModal }: { setShowModal: (show: boolean) 
   };
 
   const { mutate: save, isPending } = useMutation({
-    mutationFn: (payload: { senderName: string; recipientName: string; origin: string; destination: string }) =>
-      httpPost('/orders', payload),
+    mutationFn: async (payload: { senderName: string; recipientName: string; origin: string; destination: string }) => {
+      const [response] = await Promise.all([httpPost('/orders', payload), waitAsync(1000)]);
+      return response;
+    },
     onSuccess: () => {
       alertToast('success', 'Order created successfully');
       queryClient.invalidateQueries({ queryKey: ['orders'] });

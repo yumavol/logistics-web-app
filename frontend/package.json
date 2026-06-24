@@ -19,7 +19,8 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-toastify": "^11.1.0",
-    "simple-react-validator": "^1.6.2"
+    "simple-react-validator": "^1.6.2",
+    "use-debounce": "^10.1.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
