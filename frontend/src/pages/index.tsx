@@ -9,6 +9,8 @@ import { ORDER_STATUS, OrderStatusBadge, ORDER_STATUS_OPTIONS, UPDATABLE_ORDER_S
 import { CITY_OPTIONS } from '@/models/cities';
 import { alertToast, formatDateTime, waitAsync } from '@/helper';
 import { useDebounce } from 'use-debounce';
+import { TbCancel } from 'react-icons/tb';
+import { FaPencilAlt } from 'react-icons/fa';
 
 export default function Home() {
   const [modalForm, setModalForm] = useState(false);
@@ -17,6 +19,8 @@ export default function Home() {
   const [debouncedSearch] = useDebounce(search, 400);
   const [statusModal, setStatusModal] = useState(false);
   const [statusData, setStatusData] = useState<OrderResponse | null>(null);
+
+  const queryClient = useQueryClient();
 
   const {
     data: orders,
@@ -32,6 +36,20 @@ export default function Home() {
       return response.data;
     },
   });
+
+  const { mutate: cancelOrder, isPending: isCanceling } = useMutation({
+    mutationFn: (id: string) => httpPost(`/orders/${id}/cancel`, {}),
+    onSuccess: () => {
+      alertToast('success', 'Order canceled');
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+
+  const handleCancel = (order: OrderResponse) => {
+    if (window.confirm(`Cancel order ${order.trackingNumber}?`)) {
+      cancelOrder(order.id);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-base-100 font-sans">
@@ -66,7 +84,7 @@ export default function Home() {
           <input
             type="text"
             placeholder="Search tracking, sender, recipient"
-            className="input input-bordered input-sm w-72"
+            className="input input-bordered w-72"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -84,7 +102,7 @@ export default function Home() {
                     <th>Route</th>
                     <th>Status</th>
                     <th>updated At</th>
-                    <th>Action</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -123,16 +141,27 @@ export default function Home() {
                         </td>
                         <td>{formatDateTime(order.updatedAt)}</td>
                         <td>
-                          <button
-                            className="btn btn-xs btn-outline btn-primary"
-                            disabled={order.status === ORDER_STATUS.CANCELED.value}
-                            onClick={() => {
-                              setStatusData(order);
-                              setStatusModal(true);
-                            }}
-                          >
-                            Update Status
-                          </button>
+                          <div className="flex justify-end gap-2">
+                            <button
+                              className="btn btn-sm btn-square btn-outline btn-primary"
+                              disabled={order.status === ORDER_STATUS.CANCELED.value}
+                              title="update order status"
+                              onClick={() => {
+                                setStatusData(order);
+                                setStatusModal(true);
+                              }}
+                            >
+                              <FaPencilAlt className="size-3" />
+                            </button>
+                            <button
+                              className="btn btn-sm btn-square btn-error"
+                              disabled={isCanceling || !(order.status === ORDER_STATUS.PENDING.value)}
+                              onClick={() => handleCancel(order)}
+                              title="cancel order"
+                            >
+                              <TbCancel className="size-3" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

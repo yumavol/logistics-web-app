@@ -3,8 +3,8 @@ import { format } from 'date-fns';
 
 export const waitAsync = (sec: number) => new Promise<void>((resolve) => setTimeout(() => resolve(), sec));
 
-export const formatDate = (date: string | Date, pattern = 'dd MMM yyyy') => format(new Date(date), pattern);
-export const formatDateTime = (date: string | Date, pattern = 'dd MMM yyyy HH:mm') => format(new Date(date), pattern);
+export const formatDate = (date: string | Date, pattern = 'dd/mm/yy') => format(new Date(date), pattern);
+export const formatDateTime = (date: string | Date, pattern = 'dd/mm/yy HH:mm') => format(new Date(date), pattern);
 
 export const alertToast = (type: 'success' | 'error' | 'info' | 'warning', message: string, id?: string) => {
   switch (type) {
