@@ -278,7 +278,7 @@ function OrderForm({ setShowModal, showModal }: { setShowModal: (show: boolean) 
 
   const { mutate: save, isPending } = useMutation({
     mutationFn: async (payload: { senderName: string; recipientName: string; origin: string; destination: string }) => {
-      const [response] = await Promise.all([httpPost('/orders', payload), waitAsync(1000)]);
+      const [response] = await Promise.all([httpPost('/orders', payload), waitAsync(500)]);
       return response;
     },
     onSuccess: () => {
